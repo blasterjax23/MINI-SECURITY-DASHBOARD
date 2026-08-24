@@ -1,2 +1,1 @@
-# MINI-SECURITY-DASHBOARD
-To build a full stack mini security dashboard
+# MINI_SECURITY_DASHBOARD_

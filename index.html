@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Security Dashboard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <!-- Top Glassmorphic Navigation -->
+    <header class="app-header">
+        <div class="header-left">
+            <div class="logo-container">
+                <i data-lucide="shield" class="logo-icon"></i>
+                <span class="logo-text">Aegis SOC</span>
+            </div>
+            
+            <!-- Page Selector Dropdown -->
+            <div class="nav-dropdown-wrapper">
+                <button class="nav-dropdown-btn" id="nav-dropdown-trigger" aria-haspopup="listbox" aria-expanded="false">
+                    <span id="current-page-label">Overview</span>
+                    <i data-lucide="chevron-down" class="dropdown-chevron"></i>
+                </button>
+                <div class="nav-dropdown-menu" id="nav-dropdown-list" role="listbox">
+                    <div class="nav-dropdown-item active" data-page="overview" role="option">Overview</div>
+                    <div class="nav-dropdown-item" data-page="create-account" role="option">Create Account</div>
+                    <div class="nav-dropdown-item" data-page="login" role="option">Login</div>
+                    <div class="nav-dropdown-item" data-page="reset-password" role="option">Reset Password</div>
+                    <div class="nav-dropdown-item" data-page="ip-manager" role="option">IP Manager</div>
+                    <div class="nav-dropdown-item" data-page="password-checker" role="option">Password Checker</div>
+                    <div class="nav-dropdown-item" data-page="log-analyzer" role="option">Log Analyzer</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Simulation Tool Panel for local testing -->
+        <div class="simulation-panel">
+            <div class="sim-badge">
+                <i data-lucide="terminal" class="sim-icon"></i>
+                <span>Simulated Client IP</span>
+            </div>
+            <select id="simulated-ip-select" class="sim-select">
+                <option value="" selected>Real Client IP (Local)</option>
+                <option value="8.8.8.8">Public: 8.8.8.8 (Google)</option>
+                <option value="1.1.1.1">Public: 1.1.1.1 (Cloudflare)</option>
+                <option value="192.168.1.100">Private: 192.168.1.100 (Home)</option>
+                <option value="10.0.0.1">Private: 10.0.0.1 (Office)</option>
+                <option value="127.0.0.1">Loopback: 127.0.0.1 (Localhost)</option>
+                <option value="6.12.34.56">Military: 6.12.34.56 (DoD)</option>
+                <option value="214.5.6.7">Military: 214.5.6.7 (DoD)</option>
+                <option value="240.10.20.30">Reserved: 240.10.20.30 (IANA)</option>
+                <option value="100.64.4.4">Reserved: 100.64.4.4 (CGNAT)</option>
+                <option value="custom">-- Custom IP --</option>
+            </select>
+            <input type="text" id="custom-ip-input" class="sim-ip-input hidden" placeholder="Enter IP address...">
+        </div>
+    </header>
+
+    <main class="app-content">
+        <!-- PAGE 1: OVERVIEW -->
+        <section id="page-overview" class="page-view active">
+            <div class="page-header-block">
+                <h1 class="page-title">Overview</h1>
+                <p class="page-subtitle">Mini Security Dashboard — port of the Python CLI to a live web UI</p>
+            </div>
+
+            <!-- 2x2 Grid of Stat Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon-wrapper primary-mint">
+                        <i data-lucide="users"></i>
+                    </div>
+                    <div class="stat-details">
+                        <span class="stat-label">ACCOUNTS</span>
+                        <h2 class="stat-value" id="overview-accounts-count">0</h2>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon-wrapper success-green">
+                        <i data-lucide="shield-check"></i>
+                    </div>
+                    <div class="stat-details">
+                        <span class="stat-label">WHITELISTED IPS</span>
+                        <h2 class="stat-value" id="overview-whitelist-count">0</h2>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon-wrapper danger-red">
+                        <i data-lucide="x-circle"></i>
+                    </div>
+                    <div class="stat-details">
+                        <span class="stat-label">BLACKLISTED IPS</span>
+                        <h2 class="stat-value" id="overview-blacklist-count">0</h2>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon-wrapper warning-amber">
+                        <i data-lucide="activity"></i>
+                    </div>
+                    <div class="stat-details">
+                        <span class="stat-label">LOGIN EVENTS</span>
+                        <h2 class="stat-value" id="overview-login-events-count">0</h2>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Threat Summary Section -->
+            <div class="section-card threat-summary-section">
+                <h3 class="card-title">Threat Summary</h3>
+                <p class="card-description">Real-time statistics for network events and login anomaly detection.</p>
+                
+                <div class="threat-stats-row">
+                    <div class="threat-stat-subcard card-success">
+                        <span class="threat-label">SUCCESSFUL LOGINS</span>
+                        <h3 class="threat-value success-text" id="overview-success-logins">0</h3>
+                    </div>
+                    <div class="threat-stat-subcard card-danger">
+                        <span class="threat-label">FAILED LOGINS</span>
+                        <h3 class="threat-value danger-text" id="overview-failed-logins">0</h3>
+                    </div>
+                </div>
+
+                <!-- Suspicious IPs Callout -->
+                <div class="suspicious-callout-card" id="overview-suspicious-card">
+                    <div class="callout-header">
+                        <i data-lucide="alert-triangle" class="warning-icon"></i>
+                        <span class="callout-title">SUSPICIOUS IPS (3+ FAILED LOGINS)</span>
+                    </div>
+                    <div class="callout-content" id="overview-suspicious-list">
+                        <!-- Filled dynamically -->
+                        <em class="empty-state">No suspicious activity detected</em>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Quick Action Buttons -->
+            <div class="quick-actions-row">
+                <button class="btn btn-primary" onclick="navigateToPage('create-account')">
+                    <i data-lucide="user-plus"></i> Create Account
+                </button>
+                <button class="btn btn-outline" onclick="navigateToPage('login')">
+                    <i data-lucide="log-in"></i> Login
+                </button>
+                <button class="btn btn-outline" onclick="navigateToPage('log-analyzer')">
+                    <i data-lucide="file-text"></i> View Logs
+                </button>
+            </div>
+        </section>
+
+        <!-- PAGE 2: CREATE ACCOUNT -->
+        <section id="page-create-account" class="page-view">
+            <div class="page-header-block">
+                <h1 class="page-title">Create Account</h1>
+                <p class="page-subtitle">Enroll a new identity. Signups are dynamically audited and filtered by IP classification.</p>
+            </div>
+
+            <div class="form-card max-w-md">
+                <h3 class="card-title">Sign Up</h3>
+                <form id="register-form" onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <label for="reg-username">Username</label>
+                        <input type="text" id="reg-username" required placeholder="admin_user">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="reg-password">Password</label>
+                        <input type="password" id="reg-password" required placeholder="••••••••">
+                        
+                        <!-- Live Password Strength Indicator -->
+                        <div class="strength-indicator-wrapper">
+                            <div class="strength-bar-bg">
+                                <div class="strength-bar-fill" id="reg-strength-fill"></div>
+                            </div>
+                            <span class="strength-label-text" id="reg-strength-text">Password Strength: Empty</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reg-ip-address">IP Address</label>
+                        <input type="text" id="reg-ip-address" required placeholder="e.g. 8.8.8.8" oninput="auditRegisterIP()">
+                        <div class="strength-indicator-wrapper">
+                            <span class="strength-label-text">Classification: <span id="reg-ip-classification" class="badge badge-invalid">Unknown</span></span>
+                        </div>
+                    </div>
+
+                    <!-- Inline message status -->
+                    <div class="form-status-alert hidden" id="reg-status-alert"></div>
+
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i data-lucide="user-plus"></i> Register Account
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- PAGE 3: LOGIN -->
+        <section id="page-login" class="page-view">
+            <div class="page-header-block">
+                <h1 class="page-title">System Login</h1>
+                <p class="page-subtitle">Secure access portal. Account locks automatically after 3 consecutive failures.</p>
+            </div>
+
+            <div class="form-card max-w-md">
+                <h3 class="card-title">Authenticate</h3>
+                <form id="login-form" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="login-username">Username</label>
+                        <input type="text" id="login-username" required placeholder="admin_user">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" required placeholder="••••••••">
+                    </div>
+
+                    <!-- Attempts Left / Lock alert -->
+                    <div class="attempts-warning hidden" id="login-attempts-warning">
+                        <i data-lucide="lock" class="lock-icon"></i>
+                        <span id="login-attempts-text">Remaining attempts: 3</span>
+                    </div>
+
+                    <!-- Inline message status -->
+                    <div class="form-status-alert hidden" id="login-status-alert"></div>
+
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i data-lucide="log-in"></i> Sign In
+                    </button>
+                </form>
+                
+                <div class="card-footer-links">
+                    <a href="#" onclick="navigateToPage('reset-password'); return false;" class="footer-link">Forgot or Reset Password?</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- PAGE 4: RESET PASSWORD -->
+        <section id="page-reset-password" class="page-view">
+            <div class="page-header-block">
+                <h1 class="page-title">Reset Password</h1>
+                <p class="page-subtitle">Force password reset on locked or existing credentials. Fully audited password criteria.</p>
+            </div>
+
+            <div class="form-card max-w-md">
+                <h3 class="card-title">Change Password</h3>
+                <form id="reset-form" onsubmit="handleResetPassword(event)">
+                    <div class="form-group">
+                        <label for="reset-username">Username</label>
+                        <input type="text" id="reset-username" required placeholder="admin_user">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="reset-password">New Password</label>
+                        <input type="password" id="reset-password" required placeholder="••••••••">
+                        
+                        <!-- Live Password Strength Indicator -->
+                        <div class="strength-indicator-wrapper">
+                            <div class="strength-bar-bg">
+                                <div class="strength-bar-fill" id="reset-strength-fill"></div>
+                            </div>
+                            <span class="strength-label-text" id="reset-strength-text">Password Strength: Empty</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reset-confirm-password">Confirm Password</label>
+                        <input type="password" id="reset-confirm-password" required placeholder="••••••••">
+                    </div>
+
+                    <!-- Inline message status -->
+                    <div class="form-status-alert hidden" id="reset-status-alert"></div>
+
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i data-lucide="refresh-cw"></i> Reset Password
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- PAGE 5: IP MANAGER -->
+        <section id="page-ip-manager" class="page-view">
+            <div class="page-header-block">
+                <h1 class="page-title">IP Manager</h1>
+                <p class="page-subtitle">Configure network access policies. Whitelist/Blacklist override rules apply live.</p>
+            </div>
+
+            <!-- IP Lookup Bar -->
+            <div class="section-card lookup-section">
+                <h3 class="card-title">IP Lookup Tool</h3>
+                <div class="lookup-input-group">
+                    <input type="text" id="lookup-ip-input" placeholder="Enter IP address (e.g. 8.8.8.8)...">
+                    <button class="btn btn-primary" onclick="lookupIP()">
+                        <i data-lucide="search"></i> Lookup IP
+                    </button>
+                </div>
+                <!-- Lookup Results Block -->
+                <div class="lookup-result-card hidden" id="lookup-result-box">
+                    <div class="lookup-result-grid">
+                        <div class="result-item">
+                            <span class="result-label">IP Address</span>
+                            <span class="result-value" id="lookup-res-ip">--</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Classification</span>
+                            <span class="result-value badge" id="lookup-res-class">--</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">Policy Status</span>
+                            <span class="result-value badge" id="lookup-res-status">--</span>
+                        </div>
+                    </div>
+                    <div class="lookup-actions-row">
+                        <button class="btn btn-sm btn-outline-success" onclick="addIPFromLookup('whitelist')">Whitelist</button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="addIPFromLookup('blacklist')">Blacklist</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Manual Add Block -->
+            <div class="ip-manager-grid">
+                <div class="section-card">
+                    <h3 class="card-title">Add IP to Policy</h3>
+                    <div class="form-group">
+                        <label for="add-policy-ip">IP Address</label>
+                        <input type="text" id="add-policy-ip" placeholder="e.g. 192.168.1.1">
+                    </div>
+                    <div class="policy-button-group">
+                        <button class="btn btn-success" onclick="manualAddIP('whitelist')">
+                            <i data-lucide="plus"></i> Add to Whitelist
+                        </button>
+                        <button class="btn btn-danger" onclick="manualAddIP('blacklist')">
+                            <i data-lucide="plus"></i> Add to Blacklist
+                        </button>
+                    </div>
+                    <div class="form-status-alert hidden" id="policy-status-alert"></div>
+                </div>
+            </div>
+
+            <!-- Lists Display -->
+            <div class="ip-tables-container">
+                <div class="section-card list-table-card">
+                    <h3 class="card-title text-success-light">
+                        <i data-lucide="shield-check" class="title-icon icon-success"></i> Whitelisted IPs
+                    </h3>
+                    <div class="table-scroll">
+                        <table class="policy-table">
+                            <thead>
+                                <tr>
+                                    <th>IP Address</th>
+                                    <th>Added On</th>
+                                    <th class="text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="whitelist-table-body">
+                                <tr>
+                                    <td colspan="3" class="text-center italic text-muted">No whitelisted IPs.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="section-card list-table-card">
+                    <h3 class="card-title text-danger-light">
+                        <i data-lucide="x-circle" class="title-icon icon-danger"></i> Blacklisted IPs
+                    </h3>
+                    <div class="table-scroll">
+                        <table class="policy-table">
+                            <thead>
+                                <tr>
+                                    <th>IP Address</th>
+                                    <th>Added On</th>
+                                    <th class="text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="blacklist-table-body">
+                                <tr>
+                                    <td colspan="3" class="text-center italic text-muted">No blacklisted IPs.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PAGE 6: PASSWORD CHECKER -->
+        <section id="page-password-checker" class="page-view">
+            <div class="page-header-block">
+                <h1 class="page-title">Password Checker</h1>
+                <p class="page-subtitle">Analyze credential security. Validates passwords against typical corporate compliance audits.</p>
+            </div>
+
+            <div class="form-card max-w-md">
+                <h3 class="card-title">Credential Audit</h3>
+                <div class="form-group">
+                    <label for="check-password-input">Enter Password to Test</label>
+                    <input type="text" id="check-password-input" placeholder="Type a password..." oninput="auditPassword()">
+                </div>
+
+                <!-- Password Strength Indicator -->
+                <div class="strength-indicator-wrapper">
+                    <div class="strength-bar-bg">
+                        <div class="strength-bar-fill" id="audit-strength-fill"></div>
+                    </div>
+                    <span class="strength-label-text" id="audit-strength-text">Password Strength: Empty</span>
+                </div>
+
+                <!-- Requirements Checklist -->
+                <div class="requirements-checklist">
+                    <div class="checklist-item" id="req-len">
+                        <i data-lucide="square" class="check-box"></i>
+                        <span>Minimum 8 characters</span>
+                    </div>
+                    <div class="checklist-item" id="req-upper">
+                        <i data-lucide="square" class="check-box"></i>
+                        <span>At least one uppercase letter (A-Z)</span>
+                    </div>
+                    <div class="checklist-item" id="req-lower">
+                        <i data-lucide="square" class="check-box"></i>
+                        <span>At least one lowercase letter (a-z)</span>
+                    </div>
+                    <div class="checklist-item" id="req-digit">
+                        <i data-lucide="square" class="check-box"></i>
+                        <span>At least one digit (0-9)</span>
+                    </div>
+                    <div class="checklist-item" id="req-special">
+                        <i data-lucide="square" class="check-box"></i>
+                        <span>At least one special character (!@#$%^&*)</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PAGE 7: LOG ANALYZER -->
+        <section id="page-log-analyzer" class="page-view">
+            <div class="page-header-block">
+                <h1 class="page-title">Log Analyzer</h1>
+                <p class="page-subtitle">Security Information and Event Management (SIEM). View system access logs and export records.</p>
+            </div>
+
+            <!-- Threat Stats Row (Same cards from threat summary but here they fit as secondary headers) -->
+            <div class="threat-summary-row-wide">
+                <div class="threat-stat-subcard card-success card-glass">
+                    <span class="threat-label">SUCCESSFUL LOGINS</span>
+                    <h3 class="threat-value success-text" id="logs-success-logins">0</h3>
+                </div>
+                <div class="threat-stat-subcard card-danger card-glass">
+                    <span class="threat-label">FAILED LOGINS</span>
+                    <h3 class="threat-value danger-text" id="logs-failed-logins">0</h3>
+                </div>
+                <div class="threat-stat-subcard card-warning card-glass">
+                    <span class="threat-label">FLAGGED SUSPICIOUS IPS</span>
+                    <h3 class="threat-value warning-text" id="logs-flagged-ips">0</h3>
+                </div>
+            </div>
+
+            <div class="log-analyzer-grid">
+                <!-- Suspicious IPs panel -->
+                <div class="section-card panel-left">
+                    <h3 class="card-title">
+                        <i data-lucide="alert-triangle" class="icon-warning font-large"></i> Suspicious IPs
+                    </h3>
+                    <p class="card-description">Clients with 3+ failed logins</p>
+                    <div class="suspicious-vertical-list" id="logs-suspicious-list">
+                        <em class="empty-state">No suspicious activity detected.</em>
+                    </div>
+                </div>
+
+                <!-- Live Log Table -->
+                <div class="section-card panel-right">
+                    <div class="card-header-flex">
+                        <h3 class="card-title">Access Log Activity</h3>
+                        <a href="/api/logs/csv" class="btn btn-sm btn-primary">
+                            <i data-lucide="download"></i> Export CSV
+                        </a>
+                    </div>
+                    <div class="table-scroll max-height-medium">
+                        <table class="access-log-table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Username</th>
+                                    <th>IP Address</th>
+                                    <th>Event</th>
+                                    <th>Classification</th>
+                                </tr>
+                            </thead>
+                            <tbody id="access-log-table-body">
+                                <tr>
+                                    <td colspan="5" class="text-center italic text-muted">No log activity registered.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer block -->
+    <footer class="app-footer">
+        <p>Aegis Security Operations Center &copy; 2026. Made with Flask &amp; SQLite.</p>
+    </footer>
+
+    <!-- App Script -->
+    <script src="/static/app.js"></script>
+</body>
+</html>
